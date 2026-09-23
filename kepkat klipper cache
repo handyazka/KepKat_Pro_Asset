@@ -33,7 +33,7 @@ try:
 
     # Pakai URL format raw untuk bypass render HTML Github
     b64_panjang = fetch_private_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20panjang%20oren.png?raw=true")
-    b64_kotak = fetch_private_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20panjang%20oren.png?raw=true")
+    b64_kotak = fetch_private_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20kotak%20oren.png?raw=true")
 
     # JEDA NAPAS SINGKAT
     time.sleep(0.5)
