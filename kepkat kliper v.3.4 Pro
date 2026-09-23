@@ -1,4 +1,4 @@
-# @title kepkat kliper v.3.3 Pro
+# @title kepkat kliper v.3.4 Pro
 # ====================================================================================================
 # 1. SETUP & COLAB TERMINAL UI (SMART DETECT & UI INSTAN)
 # ====================================================================================================
@@ -76,7 +76,7 @@ try:
             </div>
 
             <div style="margin-top: 12px; color: #a1a1aa; font-size: 12px; font-weight: bold; line-height: 1.5; font-style: italic;">
-                Versi 3.3 Pro<br>
+                Versi 3.4 Pro<br>
                 <span style="font-weight: normal; font-size: 11px;">Developed by handyazka</span>
             </div>
         </div>
