@@ -21,19 +21,18 @@ try:
     # SMART DETECT: Cek apakah mesin server udah nyala di latar belakang (Port 8000)
     server_running = (os.system("fuser 8000/tcp >/dev/null 2>&1") == 0)
 
-    GITHUB_TOKEN = "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"
-
-    def fetch_private_image(url):
+    def fetch_image(url):
         try:
-            r = requests.get(url, headers={"Authorization": f"token {GITHUB_TOKEN}"})
+            # Karena repo publik, request tidak perlu headers token lagi
+            r = requests.get(url)
             if r.status_code == 200:
                 return f"data:image/png;base64,{base64.b64encode(r.content).decode('utf-8')}"
         except: pass
         return ""
 
     # Pakai URL format raw untuk bypass render HTML Github
-    b64_panjang = fetch_private_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20panjang%20oren.png?raw=true")
-    b64_kotak = fetch_private_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20kotak%20oren.png?raw=true")
+    b64_panjang = fetch_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20panjang%20oren.png?raw=true")
+    b64_kotak = fetch_image("https://github.com/handyazka/KepKat_Pro_Asset/blob/main/logo%20kotak%20oren.png?raw=true")
 
     # JEDA NAPAS SINGKAT
     time.sleep(0.5)
@@ -1984,17 +1983,12 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
     </html>
     """
 
-    # Masukkan gambar Base64 ke dalam kode HTML
     html_code = html_code.replace("FAVICON_PLACEHOLDER", b64_kotak)
     html_code = html_code.replace("LOGO_PANJANG_PLACEHOLDER", b64_panjang)
 
     with open("static/index.html", "w", encoding="utf-8") as f:
         f.write(html_code)
 
-
-    # ====================================================================================================
-    # 4. BACKEND / CORE LOGIC (FASTAPI, POTONG VIDEO, DOWNLOAD YOUTUBE)
-    # ====================================================================================================
     app = FastAPI()
     app.add_middleware(CORSMiddleware, allow_origins=["*"], allow_credentials=True, allow_methods=["*"], allow_headers=["*"])
     app.mount("/static", StaticFiles(directory="static"), name="static")
@@ -2197,7 +2191,7 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
             if d['status'] == 'downloading':
                 try:
                     percent_str = d.get('_percent_str', '0.0%')
-                    clean_str = re.sub(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])', '', percent_str).replace('%', '').strip()
+                    clean_str = re.sub(r'\x1B(?:[@-Z\-_]|\[[0-?]*[ -/]*[@-~])', '', percent_str).replace('%', '').strip()
                     percent = float(clean_str)
                     download_tracker[video_hash] = {"status": "downloading", "progress": percent}
                 except:
@@ -2498,11 +2492,9 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
         log_terminal(f"[KEPKAT-SYS] [SUCCESS] Arsip ZIP selesai dibuat!")
         return {"zip_url": f"/{zip_path}"}
 
-
     # ====================================================================================================
     # 5. SERVER RUNNER & NETWORKING (JALUR AKSES & LINGKARAN NYAWA SERVER)
     # ====================================================================================================
-    # Kalau belum running, nyalain Uvicorn baru. Kalau udah, biarin nyala.
     if not server_running:
         def run_server():
             config = uvicorn.Config(app, host="0.0.0.0", port=8000, log_level="critical")
@@ -2543,7 +2535,6 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
     btnPriv.style.cursor = 'pointer';
     btnPriv.innerText = 'SALIN KODE';
 
-    // LOGIKA MULTI-KLIK TOMBOL SALIN (PRIVAT)
     var clickCountPriv = 0;
     var clickTimerPriv = null;
 
@@ -2593,31 +2584,26 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
     display(Javascript(js_update_private))
 
     lt_url = ""
-    lt_file = "static/cf_url.txt" # Update file name for cloudflare
+    lt_file = "static/cf_url.txt"
 
-    # Smart Detect untuk Cloudflare: Pakai link lama kalau masih nyala di background
     if server_running and os.path.exists(lt_file) and os.system("pgrep -f cloudflared >/dev/null 2>&1") == 0:
         with open(lt_file, "r") as f:
             lt_url = f.read().strip()
         log_terminal("[KEPKAT-SYS] [SUCCESS] Menggunakan Tunneling Publik (Cloudflare) yang sudah aktif di latar belakang!")
     else:
-        # Bersihkan proses macet, bikin baru secara 'detached'
         os.system("pkill -9 -f cloudflared >/dev/null 2>&1 || true")
         log_terminal("[KEPKAT-SYS] [INFO] Membangun tunneling server eksternal baru (Cloudflare)... Harap tunggu.")
 
-        # Jalankan cloudflared tunnel
         cf_process = subprocess.Popen(
             ["cloudflared", "tunnel", "--url", "http://127.0.0.1:8000"],
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT,
             text=True,
-            preexec_fn=os.setsid  # Kunci biar lepas dari Colab cell pas di stop
+            preexec_fn=os.setsid
         )
 
-        # Ekstrak URL dari output cloudflared
         for line in cf_process.stdout:
             if "trycloudflare.com" in line:
-                # Cari URL trycloudflare di dalam baris output
                 match = re.search(r"https://[a-zA-Z0-9-]+\.trycloudflare\.com", line)
                 if match:
                     lt_url = match.group(0)
@@ -2639,10 +2625,8 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
         ltUrl = ltUrl.slice(0, -1);
     }}
     var kodePubUtuh = ltUrl.replace('https://', '').replace('http://', '').replace('.trycloudflare.com', '');
-    // Cloudflare random URL biasanya lebih panjang, ambil 6 karakter pertama setelah kata pertama (kalau ada hyphen)
     var kodePubUnik = kodePubUtuh;
     if (kodePubUtuh.includes('-')) {{
-        // Ambil bagian pertama sebelum hyphen pertama, kalau terlalu pendek gabung sama yg kedua
         var parts = kodePubUtuh.split('-');
         if (parts[0].length < 4 && parts.length > 1) {{
              kodePubUnik = (parts[0] + parts[1]).substring(0, 6);
@@ -2653,7 +2637,6 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
          kodePubUnik = kodePubUtuh.substring(0, 6);
     }}
 
-    // Terapkan ke UI
     document.getElementById('public-link').innerText = kodePubUnik.toUpperCase();
 
     var btnPub = document.getElementById('btn-copy-public');
@@ -2662,7 +2645,6 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
     btnPub.style.cursor = 'pointer';
     btnPub.innerText = 'SALIN KODE';
 
-    // LOGIKA MULTI-KLIK TOMBOL SALIN (PUBLIK)
     var clickCountPub = 0;
     var clickTimerPub = null;
 
@@ -2712,11 +2694,8 @@ ${csvCatatan || 'cari yang sangat berpotensi viral'}`;
     display(Javascript(js_update_public))
     log_terminal("[KEPKAT-SYS] Semua modul siap! Panel kontrol aktif.")
 
-    # TAHAN KODE BIAR SERVER TETAP HIDUP SEKALIGUS NANGANIN STOP SECARA BERSIH
     while True:
         time.sleep(3600)
 
 except BaseException:
-    # MATI DENGAN ELEGAN: Begitu lu klik "Stop", dia bersihin layar dan mati tanpa ngeluarin error merah seiprit pun!
-    heartbeat_active = False
     clear_output()
